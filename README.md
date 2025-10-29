@@ -21,6 +21,7 @@ It’s inspired by [MotionBug’s “The Cookbook: Baking up your perfect Jamf P
 - Generates an optional Jamf MDM enrollment profile on the Desktop.
 - Toggles for auto‑login, passwordless sudo, Spotlight indexing, Safari automation, and screen lock.
 - Installs Tart Guest Agent for clipboard sharing between host and VM.
+- Set the Computer Name (VM-TART-XXXX)
 
 ## Prerequisites
 
