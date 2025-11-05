@@ -14,6 +14,7 @@ It’s inspired by [MotionBug’s “The Cookbook: Baking up your perfect Jamf P
 
 [Tart](https://tart.run) is a virtualization toolset to build, run and manage macOS and Linux virtual machines on Apple Silicon. Tart uses Apple's own [Virtualization.Framework](https://developer.apple.com/documentation/virtualization) for near-native performance.
 
+Note: This packer build works with macOS Sequoia for now and soon will update for macOS Tahoe
 
 ## Overview
 
