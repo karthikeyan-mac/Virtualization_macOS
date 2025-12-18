@@ -7,6 +7,7 @@ packer {
   }
 }
 
+
 # -------------------------
 # Variables
 # -------------------------
@@ -196,7 +197,8 @@ build {
   sources = ["source.tart-cli.tart"]
 
   provisioner "shell" {
-    inline = [
+    in
+    = [
       "set -euxo pipefail",
 
       # Passwordless sudo
