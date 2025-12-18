@@ -1,6 +1,6 @@
 # macOS Virtual Machine for testing using Packer and Tart
 
-This repository contains a Packer configuration (`karthik_macvm-tart.pkr.hcl`) for building a **macOS virtual machine on Apple Silicon** that automatically enrolls into **Jamf Pro** or installs **Microsoft Intune Company Portal*** for testing.  
+This repository contains a Packer configuration for building a **macOS virtual machine on Apple Silicon** that can create an enrollment profile for **Jamf Pro** or installs **Microsoft Intune Company Portal*** for testing.  
 
 It’s inspired by [MotionBug’s “The Cookbook: Baking up your perfect Jamf Pro Test VM”](https://www.motionbug.com/the-cookbook-baking-up-your-perfect-jamf-pro-test-vm/) and uses Apple’s **Virtualization framework** with Packer to simulate real-world MDM environments.
 
@@ -14,14 +14,14 @@ It’s inspired by [MotionBug’s “The Cookbook: Baking up your perfect Jamf P
 
 [Tart](https://tart.run) is a virtualization toolset to build, run and manage macOS and Linux virtual machines on Apple Silicon. Tart uses Apple's own [Virtualization.Framework](https://developer.apple.com/documentation/virtualization) for near-native performance.
 
-**Note**: This packer build works for macOS Sequoia and will post later for macOS Tahoe.
+**Note**: This packer build works for macOS Sequoia and macOS Tahoe. Due to a bug in macOS 26.1 VMs serial number will be empty so cannot be enrolled to MDM. Apple fixed the serial number bug in macOS 26.2
 
 ## Overview
 
 - Automates macOS Setup Assistant using Tart’s boot commands for a hands‑off build.
 - Generates an optional Jamf MDM enrollment profile on the Desktop.
 - Toggles for auto‑login, passwordless sudo, Spotlight indexing, Safari automation, and screen lock.
-- Installs Tart Guest Agent for clipboard sharing between host and VM.
+- Installs Tart Guest Agent for **clipboard sharing** between host and VM.
 - Set the Computer Name (VM-TART-XXXX)
 
 ## Prerequisites
