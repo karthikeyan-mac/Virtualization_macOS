@@ -1,6 +1,6 @@
 # macOS Virtual Machine for testing using Packer and Tart
 
-This repository contains a Packer configuration for building a **macOS virtual machine on Apple Silicon** that can create an enrollment profile for **Jamf Pro** or installs **Microsoft Intune Company Portal*** for testing.  
+This repository contains a Packer configurations for building a **macOS virtual machines on Apple Silicon** that will create an enrollment profile for **Jamf Pro** or installs **Microsoft Intune Company Portal*** for testing.  
 
 It’s inspired by [MotionBug’s “The Cookbook: Baking up your perfect Jamf Pro Test VM”](https://www.motionbug.com/the-cookbook-baking-up-your-perfect-jamf-pro-test-vm/) and uses Apple’s **Virtualization framework** with Packer to simulate real-world MDM environments.
 
