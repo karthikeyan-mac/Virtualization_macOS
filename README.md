@@ -36,7 +36,7 @@ It’s inspired by [MotionBug’s “The Cookbook: Baking up your perfect Jamf P
 ## 1. Install tools
 
 ```
-brew install cirruslabs/cli/tart
+brew install openai/tools/tart
 brew tap hashicorp/tap
 brew install hashicorp/tap/packer
 ```
