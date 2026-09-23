@@ -17,9 +17,7 @@ hex=($(echo -n "$password" | xxd -p -u -c1))
 
 # Calculate padding (to multiple of 12 bytes)
 len=${#hex[@]}
-if (( len < 12 )); then
-    pad=$((12 - len))
-elif (( len % 12 != 0 )); then
+if (( len % 12 != 0 )); then
     pad=$((12 - (len % 12)))
 else
     pad=12

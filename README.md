@@ -1,8 +1,8 @@
 # macOS Virtual Machine for testing using Packer and Tart
 
-This repository contains a Packer configurations for building a **macOS virtual machines on Apple Silicon** that will create an enrollment profile for **Jamf Pro** or installs **Microsoft Intune Company Portal*** for testing.  
+This repository contains Packer configurations for building **macOS virtual machines on Apple Silicon** that create an enrollment profile for **Jamf Pro** or install the **Microsoft Intune Company Portal** for testing.
 
-It’s inspired by [MotionBug’s “The Cookbook: Baking up your perfect Jamf Pro Test VM”](https://www.motionbug.com/the-cookbook-baking-up-your-perfect-jamf-pro-test-vm/) and uses Apple’s **Virtualization framework** with Packer to simulate real-world MDM environments.
+It's inspired by [MotionBug's "The Cookbook: Baking up your perfect Jamf Pro Test VM"](https://www.motionbug.com/the-cookbook-baking-up-your-perfect-jamf-pro-test-vm/) and uses Apple's **Virtualization framework** with Packer to simulate real-world MDM environments.
 
 ---
 
@@ -14,24 +14,44 @@ It’s inspired by [MotionBug’s “The Cookbook: Baking up your perfect Jamf P
 
 [Tart](https://tart.run) is a virtualization toolset to build, run and manage macOS and Linux virtual machines on Apple Silicon. Tart uses Apple's own [Virtualization.Framework](https://developer.apple.com/documentation/virtualization) for near-native performance.
 
-**Note**: This packer build works for macOS Sequoia and macOS Tahoe. Due to a bug in macOS 26.1 VMs serial number will be empty so cannot be enrolled to MDM. Apple fixed the serial number bug in macOS 26.2
+**Note**: macOS 26.1 has an Apple bug where VM serial numbers come back empty, blocking MDM enrollment. It's fixed in macOS 26.2, which is the build the Tahoe template targets.
 
-## Overview
+## Features
 
-- Automates macOS Setup Assistant using Tart’s boot commands for a hands‑off build.
-- Generates an optional Jamf MDM enrollment profile on the Desktop.
-- Toggles for auto‑login, passwordless sudo, Spotlight indexing, Safari automation, and screen lock.
-- Installs Tart Guest Agent for **clipboard sharing** between host and VM.
-- Set the Computer Name (VM-TART-XXXX)
+- **Three macOS versions, one workflow** — dedicated templates for Sequoia, Tahoe, and Golden Gate, each producing a ready-to-clone Tart VM image.
+- **Fully hands-off provisioning** — Setup Assistant is driven end-to-end via Tart's `boot_command` keystrokes on Sequoia/Tahoe; Golden Gate instead creates the account directly through Tart's `--provisioning-opts`, skipping Setup Assistant entirely.
+- **MDM enrollment, your choice of vendor** — generates a Jamf Pro `.mobileconfig` enrollment profile on the Desktop (with a fresh UUID, your invitation ID, and Jamf URL baked in), downloads and silently installs the Microsoft Intune Company Portal, or skips MDM altogether — controlled by a single `mdm_vendor` variable.
+- **Configurable local account** — username and password are both variables, applied consistently across SSH access, account creation, and every automated step that needs to authenticate.
+- **Auto-login** — the created account logs in automatically on boot, toggleable.
+- **Passwordless sudo** — grants the account NOPASSWD sudo via `sudoers.d`, so the rest of the build (and any post-build automation) can run privileged commands non-interactively.
+- **Gatekeeper disabled** — both via `spctl --global-disable` and by walking through the Privacy & Security confirmation in System Settings, so unsigned/ad-hoc test builds run without friction.
+- **Remote access enabled** — Screen Sharing and Remote Login (SSH) are turned on during setup, so the VM is reachable the moment it boots.
+- **Spotlight indexing disabled** — toggleable, reduces background CPU/disk load in lab VMs.
+- **Safari pre-automated** — launches Safari once to populate its defaults and enables `safaridriver`, so Safari-based automation/testing works immediately.
+- **Screen lock disabled** — toggleable, keeps the session unlocked for unattended lab use.
+- **System sleep prevented** — the VM won't sleep mid-test.
+- **Clipboard sharing** — installs the Tart Guest Agent so copy/paste works between host and guest, toggleable.
+- **Unique Computer Name** — sets a random `VM-TART-XXXX` hostname on every build, avoiding name collisions across clones.
+- **Thin-provisioned disks** — Tahoe and Golden Gate use Tart's `asif` disk format for a smaller on-disk image footprint.
+- **Recovery partition kept** — so `softwareupdate` still works inside the finished VM.
+- **Everything overridable** — every credential, URL, and toggle above is a Packer variable, so a single template file supports many different builds via `-var`/`-var-file` at build time.
+
+## Available templates
+
+| File | Target macOS | Default `vm_name` | Setup method |
+|---|---|---|---|
+| `macos15.6.1_sequoia-tart.pkr.hcl` | 15.6.1 (24G90) | `sequoia-jamfdev-1561` | Setup Assistant `boot_command` keystrokes |
+| `macos26.2_tahoe-tart.pkr.hcl` | 26.2 (25C56) | `tahoe-jamfdev-261` | Setup Assistant `boot_command` keystrokes |
+| `macos27.0_golden-gate-tart.pkr.hcl` | 27.0 (26A428) | `goldengate-jamfdev-270` | Tart's `--provisioning-opts` (no Setup Assistant); requires Tart CLI ≥ 2.33.0 and macOS 27+ on the host |
 
 ## Prerequisites
 
 - Apple Silicon
 - [Homebrew](https://brew.sh)
-- Packer ≥ 1.7 and Tart ≥ 1.12.0 installed.
-- Jamf Pro access to create enrollment invitations.
+- Packer ≥ 1.16 and Tart ≥ 1.16.0 (Sequoia/Tahoe); the Golden Gate template needs Tart CLI ≥ 2.33.0 for `--provisioning-opts` and a macOS 27+ host.
+- Jamf Pro access to create enrollment invitations (only needed if `mdm_vendor = jamf`).
 - Internet connectivity for IPSW and Homebrew installs.
-- IPSW Links (https://mrmacintosh.com/apple-silicon-m1-full-macos-restore-ipsw-firmware-files-database/)
+- IPSW Links: [mrmacintosh.com's Apple Silicon IPSW database](https://mrmacintosh.com/apple-silicon-m1-full-macos-restore-ipsw-firmware-files-database/)
 
 ## 1. Install tools
 
@@ -44,50 +64,52 @@ brew install hashicorp/tap/packer
 ## 2. Configuration Variables in packer file
 
 ### Core variables
-| Name | Type | Default | Description |
-|---|---|---|---|
-| vm_name | string | sequoia-jamfdev-1542 | Name of the virtual machine to create. |
-| ipsw_url | string | https://updates.cdn-apple.com/2025SpringFCS/fullrestores/082-16517/AACDDC33-9683-4431-98AF-F04EF7C15EE3/UniversalMac_15.4_24E248_Restore.ipsw | macOS IPSW restore image URL used to build the VM. |
-| account_userName | string | admin | Local macOS account username created during Setup Assistant. |
-| account_password | string (sensitive) | CHANGE_ME | Local macOS account password; override via -var or var-file. |
-| mdm_vendor | string | jamf | jamf/intune/nomdm |
-| jamf_url | string | https://karthik.jamfcloud.com | Jamf Cloud URL |
-| mdm_invitation_id | string | 26983012345645772342744680906537738018634 | Jamf Pro enrollment invitation ID used for profile enrollment. |
-
+| Name | Type | Description |
+|---|---|---|
+| `vm_name` | string | Name of the VM to create. Default differs per template — see the table above. |
+| `ipsw_url` | string | macOS IPSW restore image URL used to build the VM. Each template pins the build it was verified against; get newer builds from [mrmacintosh.com](https://mrmacintosh.com/apple-silicon-m1-full-macos-restore-ipsw-firmware-files-database/). |
+| `account_userName` | string | Local macOS account username created during setup. Default: `admin`. |
+| `account_password` | string (sensitive) | Local macOS account password. Default: `karthik123` — override via `-var` or a var-file rather than relying on the checked-in default. |
+| `mdm_vendor` | string | `jamf` or `intune` (case-insensitive). Set it to anything else, e.g. `none`, to skip MDM enrollment entirely. |
+| `jamf_url` | string | Jamf Cloud URL. Default: `https://karthik.jamfcloud.com`. |
+| `mdm_invitation_id` | string | Jamf Pro enrollment invitation ID; only used when `mdm_vendor = jamf`. Default differs per template — see that file. |
 
 ### Feature toggles
 | Name | Type | Default | Description |
 |---|---|---|---|
-| enable_auto_login | bool | true | Enables automatic login for the specified user. |
-| enable_passwordless_sudo | bool | true | Grants passwordless sudo to the specified user via sudoers.d. |
-| enable_spotlight_disable | bool | true | Disables Spotlight indexing to reduce background load in lab VMs. |
-| enable_safari_automation | bool | true | Launches Safari once and enables safaridriver for automation. |
-| enable_screenlock_disable | bool | true | Disables screen lock for the specified user. |
-| enable_clipboard_sharing | bool | true | Installs Tart Guest Agent to enable host–guest clipboard sharing. |
-| create_mdm_profile | bool | true | Generates an MDM .mobileconfig on Desktop to enroll into Jamf Pro. |
+| `enable_auto_login` | bool | true | Enables automatic login for the specified user. On the Golden Gate template, login always happens once during provisioning (required to reach the desktop and complete the build) — this toggle only controls whether it's still enabled on the finished image. |
+| `enable_passwordless_sudo` | bool | true | Grants passwordless sudo to the specified user via `sudoers.d`. Several steps later in the build assume this is on and call `sudo` non-interactively — turning it off without another way to authenticate will stall those steps. |
+| `enable_spotlight_disable` | bool | true | Disables Spotlight indexing to reduce background load in lab VMs. |
+| `enable_safari_automation` | bool | true | Launches Safari once and enables `safaridriver` for automation. |
+| `enable_screenlock_disable` | bool | true | Disables screen lock for the specified user. |
+| `enable_clipboard_sharing` | bool | true | Installs Tart Guest Agent to enable host–guest clipboard sharing. |
 
 ## 3. 🔑Getting Your Jamf Invitation ID (if JAMF is your MDM)
 
-1. Log in to Jamf Pro → **Computers → PreStage Enrollments → Invitations**  
-2. Create a new invitation.  
-3. Copy the URL that looks like:  
-   `https://your.jamfcloud.com/enroll?invitation=XXXXXXXXXXXX`  
-4. The part after `invitation=` is your **Invitation ID**.  
-5. Add it to `mdm_invitation_id` variable
+1. Log in to Jamf Pro → **Computers → PreStage Enrollments → Invitations**
+2. Create a new invitation.
+3. Copy the URL that looks like:
+   `https://your.jamfcloud.com/enroll?invitation=XXXXXXXXXXXX`
+4. The part after `invitation=` is your **Invitation ID**.
+5. Add it to the `mdm_invitation_id` variable.
 
 ---
 
 ## 4.🧑‍💻Building the VM
 
 ```bash
-packer init karthik_macvm-tart.pkr.hcl
-packer validate karthik_macvm-tart.pkr.hcl
-packer build karthik_macvm-tart.pkr.hcl
+packer init macos26.2_tahoe-tart.pkr.hcl
+packer validate macos26.2_tahoe-tart.pkr.hcl
+packer build macos26.2_tahoe-tart.pkr.hcl
 ```
-### Override variable at runtime (build)
-```packer build -var=“account_userName=macadmin” -var=“account_password=supersecurepass” -var="enable_auto_login=true" karthik_macvm-tart.pkr.hcl```
+Replace with `macos15.6.1_sequoia-tart.pkr.hcl` or `macos27.0_golden-gate-tart.pkr.hcl` to build the Sequoia or Golden Gate image instead.
 
-🟥 $${\color{Red}Note:}$$ No interaction required. Once the image finishes installing, Tart starts the VM and runs the automated setup. Avoid clicking or typing in VM and allow the build to finish.
+### Override variable at runtime (build)
+```bash
+packer build -var="account_userName=macadmin" -var="account_password=supersecurepass" -var="enable_auto_login=true" macos26.2_tahoe-tart.pkr.hcl
+```
+
+🟥 $${\color{Red}Note:}$$ No interaction required. Once the image finishes installing, Tart starts the VM and runs the automated setup. Avoid clicking or typing in the VM and allow the build to finish.
 
 ## 5. Clone your VM with Tart
 
@@ -97,15 +119,15 @@ tart set prod-test-vm --display-refit --random-serial --random-mac
 tart run my-test-vm
 ```
 
-### Useful Tart run commands 
+### Useful Tart run commands
 ```
 tart run my-test-vm --dir=SharedFolder:~      # Shared Folders from host to vm
 tart run my-test-vm --recovery                # Boot into recovery mode
 tart run my-test-vm --no-graphics             # Don't open a UI window.
 tart run my-test-vm --vnc                     # Use screen sharing instead of the built-in UI.
-tart run my-test-vm --vnc-experimental        # Use Virtualization.Framework's VNC server instead of the built-in UI. 
+tart run my-test-vm --vnc-experimental        # Use Virtualization.Framework's VNC server instead of the built-in UI.
 tart help run                                 # tart run manual pages for all other options
-``` 
+```
 
 ## Tart tips
 
@@ -117,3 +139,4 @@ tart help run                                 # tart run manual pages for all ot
 - [The Cookbook: Baking up your perfect Jamf Pro Test VM](https://www.motionbug.com/the-cookbook-baking-up-your-perfect-jamf-pro-test-vm/)
 - [Packer Docs](https://developer.hashicorp.com/packer/docs)
 - [Tart](https://tart.run)
+- [cirruslabs/macos-image-templates](https://github.com/cirruslabs/macos-image-templates) — upstream reference templates these boot_commands are adapted from

@@ -1,14 +1,12 @@
 packer {
   required_plugins {
     tart = {
-      version = ">= 1.16.0"
+      version = ">= 1.12.0"
       source  = "github.com/cirruslabs/tart"
     }
   }
 }
-// Tested for macOS 26.0 to 26.2
-// macOS 26.1 VM does not get Serial Numbers due to a known issue so MDM enrollment will not work
-// Serial Number issue fixed in macOS 26.2 
+
 
 # -------------------------
 # Variables
@@ -16,13 +14,13 @@ packer {
 
 variable "vm_name" {
   type        = string
-  default     = "tahoe-jamfdev-261"
+  default     = "sequoia-jamfdev-1561"
   description = "Name of the virtual machine to create"
 }
 
 variable "ipsw_url" {
   type        = string
-  default     = "https://updates.cdn-apple.com/2025FallFCS/fullrestores/093-37399/E144C918-CF99-4BBC-B1D0-3E739B9A3F2D/UniversalMac_26.2_25C56_Restore.ipsw"
+  default     = "https://updates.cdn-apple.com/2025SummerFCS/fullrestores/093-10809/CFD6DD38-DAF0-40DA-854F-31AAD1294C6F/UniversalMac_15.6.1_24G90_Restore.ipsw"
   description = "URL to the macOS IPSW file"
 }
 
@@ -41,8 +39,8 @@ variable "account_password" {
 
 variable "mdm_vendor" {
   type        = string
-  default     = "jamf"
-  description = "jamf/intune (Case sensitive)"
+  default     = "intune"
+  description = "Jamf/Intune (case-insensitive)"
 }
 
 variable "jamf_url" {
@@ -53,7 +51,7 @@ variable "jamf_url" {
 
 variable "mdm_invitation_id" {
   type        = string
-  default     = "156564885916673307677288915149040911391"
+  default     = "2698309539233484577234274464940158018634"
   description = "MDM enrollment invitation ID"
 }
 
@@ -69,7 +67,7 @@ variable "enable_auto_login" {
 variable "enable_passwordless_sudo" {
   type        = bool
   default     = true
-  description = "Enable passwordless duo"
+  description = "Enable passwordless sudo (required for other steps below that call sudo non-interactively)"
 }
 
 variable "enable_spotlight_disable" {
@@ -116,7 +114,7 @@ source "tart-cli" "tart" {
   disk_size_gb = 100
   ssh_username = "${var.account_userName}"
   ssh_password = "${var.account_password}"
-  ssh_timeout  = "180s"
+  ssh_timeout  = "300s"
 
   # Automates macOS Setup Assistant
   boot_command = [
@@ -124,7 +122,7 @@ source "tart-cli" "tart" {
     # Language selection: workaround by switching to Italiano first, then English
     "<wait30s>italiano<esc>english<wait2s><enter>",
     # Select Country/Region
-    "<wait30s><click 'Select Your Country or Region'><wait5s>united states<leftShiftOn><tab><leftShiftOff><spacebar>",
+    "<wait30s>united states<leftShiftOn><tab><leftShiftOff><wait4s><spacebar>",
     # Transfer Your Data → Skip
     "<wait10s><tab><tab><tab><spacebar><tab><tab><wait4s><spacebar>",
     # Written and Spoken Languages → Continue
@@ -134,76 +132,59 @@ source "tart-cli" "tart" {
     # Data & Privacy → Continue
     "<wait10s><leftShiftOn><tab><leftShiftOff><wait4s><spacebar>",
     # Create a Mac Account
-    "<wait10s><tab><tab><tab><tab><tab><tab>${var.account_userName}<tab>${var.account_userName}<tab>${var.account_password}<tab>${var.account_password}<tab><tab><spacebar><tab><tab><spacebar>",
+    "<wait10s>${var.account_userName}<tab>${var.account_userName}<tab>${var.account_password}<tab>${var.account_password}<tab><tab><spacebar><tab><tab><spacebar>",
     # Enable Voice Over (then disable later)
     "<wait120s><leftAltOn><f5><leftAltOff>",
     # Skip Apple ID sign-in
     "<wait10s><leftShiftOn><tab><leftShiftOff><spacebar>",
-    # Are you sure you want to skip signing in with an Apple ID?
     "<wait10s><tab><spacebar>",
     # Terms and Conditions → Agree
     "<wait10s><leftShiftOn><tab><leftShiftOff><spacebar>",
-    # I have read and agree to the macOS Software License Agreement
     "<wait10s><tab><spacebar>",
     # Location Services → Skip
     "<wait10s><leftShiftOn><tab><leftShiftOff><spacebar>",
-    # Are you sure you don't want to use Location Services?
     "<wait10s><tab><spacebar>",
     # Time Zone → Set UTC
-    "<wait10s><tab><tab><tab>UTC<enter><leftShiftOn><tab><leftShiftOff><spacebar>",
+    "<wait10s><tab><tab>UTC<enter><leftShiftOn><tab><tab><leftShiftOff><spacebar>",
     # Analytics → Skip
     "<wait10s><leftShiftOn><tab><leftShiftOff><spacebar>",
     # Screen Time → Skip
-    "<wait10s><tab><tab><spacebar>",
+    "<wait10s><tab><spacebar>",
     # Siri → Skip
     "<wait10s><tab><spacebar><leftShiftOn><tab><leftShiftOff><spacebar>",
-    # You Mac is Ready for FileVault
-    "<wait10s><leftShiftOn><tab><tab><leftShiftOff><spacebar>",
-    # Mac Data Will Not Be Securely Encrypted
-    "<wait10s><tab><spacebar>",
     # Choose Look → Default
     "<wait10s><leftShiftOn><tab><leftShiftOff><spacebar>",
     # Auto Update → Enable
-    "<wait10s><tab><tab><spacebar>",
+    "<wait10s><tab><spacebar>",
     # Welcome Screen → Enter Desktop
-    "<wait20s><spacebar>",
+    "<wait10s><spacebar>",
     # Disable Voice Over
-    "<wait10s><leftAltOn><f5><leftAltOff>",
+    "<leftAltOn><f5><leftAltOff>",
     # Enable keyboard navigation (for later system tweaks)
-    "<wait10s><leftAltOn><spacebar><leftAltOff>Terminal<wait10s><enter>",
-    "<wait20s>defaults write NSGlobalDomain AppleKeyboardUIMode -int 3<enter>",
-    # Now that the installation is done, open "System Settings"
-    # On Tahoe opening System Settings through Spotlight is not very reliable, sometimes opens System information
+    "<wait10s><leftAltOn><spacebar><leftAltOff>Terminal<enter>",
+    "<wait10s>defaults write NSGlobalDomain AppleKeyboardUIMode -int 3<enter>",
+    "<wait10s><leftAltOn>q<leftAltOff>",
     # Open System Settings → Sharing
-    "<wait10s>open '/System/Applications/System Settings.app'<enter>",
-    # Navigate to "Sharing"
+    "<wait10s><leftAltOn><spacebar><leftAltOff>System Settings<enter>",
     "<wait10s><leftCtrlOn><f2><leftCtrlOff><right><right><right><down>Sharing<enter>",
-    # Navigate to "Screen Sharing" and enable it
-    "<wait10s><tab><tab><tab><tab><tab><spacebar>",
+    # Enable Screen Sharing
+    "<wait10s><tab><tab><tab><tab><tab><tab><tab><spacebar>",
     # Enable Remote Login
-    "<wait10s><tab><tab><tab><tab><tab><tab><tab><tab><tab><tab><tab><tab><spacebar>",
-    # Quit System Settings
+    "<wait30s><tab><tab><tab><tab><tab><tab><tab><tab><tab><tab><tab><tab><spacebar>",
     "<wait10s><leftAltOn>q<leftAltOff>",
     # Disable Gatekeeper via Terminal
     "<wait10s><leftAltOn><spacebar><leftAltOff>Terminal<enter>",
     "<wait10s>sudo spctl --global-disable<enter>",
     "<wait10s>${var.account_password}<enter>",
+    "<wait10s><leftAltOn>q<leftAltOff>",
     # Disable Gatekeeper via System Settings
-    "<wait10s>open '/System/Applications/System Settings.app'<enter>",
+    "<wait10s><leftAltOn><spacebar><leftAltOff>System Settings<enter>",
     "<wait10s><leftCtrlOn><f2><leftCtrlOff><right><right><right><down>Privacy & Security<enter>",
-    "<wait10s><leftShiftOn><tab><tab><tab><tab><tab><tab><leftShiftOff>",
     "<wait10s><down><wait1s><down><wait1s><enter>",
     "<wait10s>${var.account_password}<enter>",
     "<wait10s><leftShiftOn><tab><leftShiftOff><wait1s><spacebar>",
-    # Quit System Settings
-    "<wait10s><leftAltOn>q<leftAltOff>",
-    # Quit Terminal
     "<wait10s><leftAltOn>q<leftAltOff>",
   ]
-  
-  run_extra_args = [
-      "--no-audio"
-    ]
 
   create_grace_time  = "30s"
   recovery_partition = "keep"
@@ -222,13 +203,13 @@ build {
       # Passwordless sudo
       "if [ \"${var.enable_passwordless_sudo}\" = \"true\" ]; then",
       "  echo \"Enabling passwordless sudo for ${var.account_userName}...\"",
-      "  echo ${var.account_password} | sudo -S sh -c \"mkdir -p /etc/sudoers.d/; echo '${var.account_userName} ALL=(ALL) NOPASSWD: ALL' | EDITOR=tee visudo /etc/sudoers.d/${var.account_userName}-nopasswd\"",
+      "  echo \"${var.account_password}\" | sudo -S sh -c \"mkdir -p /etc/sudoers.d/; echo '${var.account_userName} ALL=(ALL) NOPASSWD: ALL' | EDITOR=tee visudo /etc/sudoers.d/${var.account_userName}-nopasswd\"",
       "fi",
 
       # Auto-login
       "if [ \"${var.enable_auto_login}\" = \"true\" ]; then",
-      "   curl https://raw.githubusercontent.com/karthikeyan-mac/Virtualization_macOS/refs/heads/main/kcpasswordgen.sh -o /tmp/kcpasswordgen.sh",
-      "   encoded_value=\"$(bash /tmp/kcpasswordgen.sh ${var.account_password})\"",
+      "   curl -f https://raw.githubusercontent.com/karthikeyan-mac/Virtualization_macOS/refs/heads/main/kcpasswordgen.sh -o /tmp/kcpasswordgen.sh",
+      "   encoded_value=\"$(bash /tmp/kcpasswordgen.sh \"${var.account_password}\")\"",
       "   echo \"Enabling passwordless login\"",
       "   echo \"$encoded_value\" | sudo xxd -r - /etc/kcpassword",
       "   echo \"$encoded_value\"",
@@ -251,14 +232,14 @@ build {
       "   SAFARI_PID=$!",
       "   disown",
       "   sleep 30",
-      "   kill -9 $SAFARI_PID",
+      "   kill -9 \"$SAFARI_PID\" || true",
       "   sudo safaridriver --enable",
       "fi",
 
       # Screen lock disable
       "if [ \"${var.enable_screenlock_disable}\" = \"true\" ]; then",
       "   echo \"Disabling screen lock...\"",
-      "   sysadminctl -screenLock off -password ${var.account_password}",
+      "   sysadminctl -screenLock off -password \"${var.account_password}\"",
       "fi",
 
       # Spotlight disable
@@ -272,7 +253,7 @@ build {
       "   echo \"Installing tart guest agent to enable Clipboard sharing...\"",
       "   /bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\"",
       "    /opt/homebrew/bin/brew install cirruslabs/cli/tart-guest-agent",
-      "   curl https://raw.githubusercontent.com/cirruslabs/macos-image-templates/refs/heads/main/data/tart-guest-agent.plist -o tart-guest-agent.plist",
+      "   curl -f https://raw.githubusercontent.com/cirruslabs/macos-image-templates/refs/heads/main/data/tart-guest-agent.plist -o tart-guest-agent.plist",
       "   sudo mv tart-guest-agent.plist /Library/LaunchAgents/org.cirruslabs.tart-guest-agent.plist",
       "   sudo chown -R root:wheel /Library/LaunchAgents/org.cirruslabs.tart-guest-agent.plist",
       "fi",
@@ -285,7 +266,7 @@ build {
 
       # Generate MDM profile
       // Create MDM enrollment profile
-      "if [ \"${var.mdm_vendor}\" = \"jamf\" ]; then",
+      "if [ \"${lower(var.mdm_vendor)}\" = \"jamf\" ]; then",
       "  echo \"Creating MDM Profile on Desktop\"",
       "cat << EOF > ~/Desktop/mdm_enroll.mobileconfig",
       "<?xml version=\"1.0\" encoding=\"UTF-8\"?>",
@@ -326,7 +307,7 @@ build {
       "</plist>",
       "EOF",
       "fi",
-      "if [ \"${var.mdm_vendor}\" = \"intune\" ]; then",
+      "if [ \"${lower(var.mdm_vendor)}\" = \"intune\" ]; then",
       "   echo \"Downloading and installing the Intune Company Portal\"",
       "   curl -L -o CompanyPortal-Installer.pkg \"https://go.microsoft.com/fwlink/?linkid=853070\"",
       "   sleep 10",

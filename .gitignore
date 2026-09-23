@@ -1,2 +1,3 @@
 .DS_Store
-no_git_tahoe_karthik_macvm-tart.pkr.hcl
+no_git_*.pkr.hcl
+scripts/
