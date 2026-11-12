@@ -30,7 +30,7 @@ It's inspired by [MotionBug's "The Cookbook: Baking up your perfect Jamf Pro Tes
 - **Safari pre-automated** — launches Safari once to populate its defaults and enables `safaridriver`, so Safari-based automation/testing works immediately.
 - **Screen lock disabled** — toggleable, keeps the session unlocked for unattended lab use.
 - **System sleep prevented** — the VM won't sleep mid-test.
-- **Clipboard sharing** — installs the Tart Guest Agent so copy/paste works between host and guest, toggleable.
+- **Clipboard sharing** — installs the Tart Guest Agent (from the `openai/tools` Homebrew tap, which the build trusts automatically) so copy/paste works between host and guest, toggleable.
 - **Unique Computer Name** — sets a random `VM-TART-XXXX` hostname on every build, avoiding name collisions across clones.
 - **Thin-provisioned disks** — Tahoe and Golden Gate use Tart's `asif` disk format for a smaller on-disk image footprint.
 - **Recovery partition kept** — so `softwareupdate` still works inside the finished VM.
@@ -42,7 +42,7 @@ It's inspired by [MotionBug's "The Cookbook: Baking up your perfect Jamf Pro Tes
 |---|---|---|---|
 | `macos15.6.1_sequoia-tart.pkr.hcl` | 15.6.1 (24G90) | `sequoia-jamfdev-1561` | Setup Assistant `boot_command` keystrokes |
 | `macos26.2_tahoe-tart.pkr.hcl` | 26.2 (25C56) | `tahoe-jamfdev-261` | Setup Assistant `boot_command` keystrokes |
-| `macos27.0_golden-gate-tart.pkr.hcl` | 27.0 (26A428) | `goldengate-jamfdev-270` | Tart's `--provisioning-opts` (no Setup Assistant); requires Tart CLI ≥ 2.33.0 and macOS 27+ on the host |
+| `macos27.2_golden-gate-tart.pkr.hcl` | 27.2 (26B123) | `goldengate-jamfdev-272` | Tart's `--provisioning-opts` (no Setup Assistant); requires Tart CLI ≥ 2.33.0 and macOS 27+ on the host |
 
 ## Prerequisites
 
@@ -72,7 +72,7 @@ brew install hashicorp/tap/packer
 | `account_password` | string (sensitive) | Local macOS account password. Default: `karthik123` — override via `-var` or a var-file rather than relying on the checked-in default. |
 | `mdm_vendor` | string | `jamf` or `intune` (case-insensitive). Set it to anything else, e.g. `none`, to skip MDM enrollment entirely. |
 | `jamf_url` | string | Jamf Cloud URL. Default: `https://karthik.jamfcloud.com`. |
-| `mdm_invitation_id` | string | Jamf Pro enrollment invitation ID; only used when `mdm_vendor = jamf`. Default differs per template — see that file. |
+| `mdm_invitation_id` | string | Jamf Pro enrollment invitation ID; only used when `mdm_vendor = jamf`. Default is the placeholder `REPLACE_WITH_INVITATION_ID` — set your own via `-var` or edit the file. |
 
 ### Feature toggles
 | Name | Type | Default | Description |
@@ -82,7 +82,7 @@ brew install hashicorp/tap/packer
 | `enable_spotlight_disable` | bool | true | Disables Spotlight indexing to reduce background load in lab VMs. |
 | `enable_safari_automation` | bool | true | Launches Safari once and enables `safaridriver` for automation. |
 | `enable_screenlock_disable` | bool | true | Disables screen lock for the specified user. |
-| `enable_clipboard_sharing` | bool | true | Installs Tart Guest Agent to enable host–guest clipboard sharing. |
+| `enable_clipboard_sharing` | bool | true | Installs Tart Guest Agent (`brew install openai/tools/tart-guest-agent`) to enable host–guest clipboard sharing. |
 
 ## 3. 🔑Getting Your Jamf Invitation ID (if JAMF is your MDM)
 
@@ -102,7 +102,7 @@ packer init macos26.2_tahoe-tart.pkr.hcl
 packer validate macos26.2_tahoe-tart.pkr.hcl
 packer build macos26.2_tahoe-tart.pkr.hcl
 ```
-Replace with `macos15.6.1_sequoia-tart.pkr.hcl` or `macos27.0_golden-gate-tart.pkr.hcl` to build the Sequoia or Golden Gate image instead.
+Replace with `macos15.6.1_sequoia-tart.pkr.hcl` or `macos27.2_golden-gate-tart.pkr.hcl` to build the Sequoia or Golden Gate image instead.
 
 ### Override variable at runtime (build)
 ```bash
@@ -140,3 +140,11 @@ tart help run                                 # tart run manual pages for all ot
 - [Packer Docs](https://developer.hashicorp.com/packer/docs)
 - [Tart](https://tart.run)
 - [cirruslabs/macos-image-templates](https://github.com/cirruslabs/macos-image-templates) — upstream reference templates these boot_commands are adapted from
+
+## Previous versions
+
+Older, known-working templates are kept in [`previous_versions/`](previous_versions/) for anyone who needs an earlier build:
+
+| File | Target macOS | Default `vm_name` |
+|---|---|---|
+| `previous_versions/macos27.0_golden-gate-tart.pkr.hcl` | 27.0 (26A428) | `goldengate-jamfdev-270` |

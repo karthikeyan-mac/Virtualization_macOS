@@ -53,7 +53,7 @@ variable "jamf_url" {
 
 variable "mdm_invitation_id" {
   type        = string
-  default     = "156564885916673307677288915149040911391"
+  default     = "REPLACE_WITH_INVITATION_ID"
   description = "MDM enrollment invitation ID"
 }
 
@@ -273,7 +273,9 @@ build {
       "if [ \"${var.enable_clipboard_sharing}\" = \"true\" ]; then",
       "   echo \"Installing tart guest agent to enable Clipboard sharing...\"",
       "   /bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\"",
-      "    /opt/homebrew/bin/brew install cirruslabs/cli/tart-guest-agent",
+      "   /opt/homebrew/bin/brew tap openai/tools",
+      "   /opt/homebrew/bin/brew trust openai/tools || true",
+      "   /opt/homebrew/bin/brew install openai/tools/tart-guest-agent",
       "   curl -f https://raw.githubusercontent.com/cirruslabs/macos-image-templates/refs/heads/main/data/tart-guest-agent.plist -o tart-guest-agent.plist",
       "   sudo mv tart-guest-agent.plist /Library/LaunchAgents/org.cirruslabs.tart-guest-agent.plist",
       "   sudo chown -R root:wheel /Library/LaunchAgents/org.cirruslabs.tart-guest-agent.plist",

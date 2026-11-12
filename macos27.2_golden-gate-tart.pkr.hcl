@@ -23,13 +23,13 @@ packer {
 
 variable "vm_name" {
   type        = string
-  default     = "goldengate-jamfdev-270"
+  default     = "goldengate-jamfdev-272"
   description = "Name of the virtual machine to create"
 }
 
 variable "ipsw_url" {
   type        = string
-  default     = "https://updates.cdn-apple.com/2026FallFCS/afcfc88e-bbe6-44bf-a5da-07c56eebc06c/UniversalMac_27.0_26A428_Restore.ipsw"
+  default     = "https://updates.cdn-apple.com/2026FallFCS/c9671975-52db-4fb5-9af2-00217169ba8d/UniversalMac_27.2_26B123_Restore.ipsw"
   description = "URL to the macOS IPSW file"
 }
 
@@ -60,7 +60,7 @@ variable "jamf_url" {
 
 variable "mdm_invitation_id" {
   type        = string
-  default     = "298374659182735649283746519283746501928374"
+  default     = "REPLACE_WITH_INVITATION_ID"
   description = "MDM enrollment invitation ID"
 }
 
@@ -240,7 +240,9 @@ build {
       "if [ \"${var.enable_clipboard_sharing}\" = \"true\" ]; then",
       "   echo \"Installing tart guest agent to enable Clipboard sharing...\"",
       "   /bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\"",
-      "    /opt/homebrew/bin/brew install cirruslabs/cli/tart-guest-agent",
+      "   /opt/homebrew/bin/brew tap openai/tools",
+      "   /opt/homebrew/bin/brew trust openai/tools || true",
+      "   /opt/homebrew/bin/brew install openai/tools/tart-guest-agent",
       "   curl -f https://raw.githubusercontent.com/cirruslabs/macos-image-templates/refs/heads/main/data/tart-guest-agent.plist -o tart-guest-agent.plist",
       "   sudo mv tart-guest-agent.plist /Library/LaunchAgents/org.cirruslabs.tart-guest-agent.plist",
       "   sudo chown -R root:wheel /Library/LaunchAgents/org.cirruslabs.tart-guest-agent.plist",
