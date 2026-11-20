@@ -46,7 +46,7 @@ tart --version
 
 ```bash
 git clone https://github.com/karthikeyan-mac/Virtualization_macOS.git
-cd Virtualization_macOS/ManageEngineWorkshop
+cd Virtualization_macOS/MacAdmins_EndpointCentral
 ```
 
 ### 3. Check your Mac can build the VM
