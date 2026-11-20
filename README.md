@@ -4,6 +4,8 @@ This repository contains Packer configurations for building **macOS virtual mach
 
 It's inspired by [MotionBug's "The Cookbook: Baking up your perfect Jamf Pro Test VM"](https://www.motionbug.com/the-cookbook-baking-up-your-perfect-jamf-pro-test-vm/) and uses Apple's **Virtualization framework** with Packer to simulate real-world MDM environments.
 
+> **Apple Silicon only.** These templates run only on Apple Silicon Macs (M1 or later). Intel Macs are not supported.
+
 ---
 
 ### What is Packer?
@@ -48,7 +50,7 @@ It's inspired by [MotionBug's "The Cookbook: Baking up your perfect Jamf Pro Tes
 
 ## Prerequisites
 
-- Apple Silicon
+- Apple Silicon Mac (M1 or later). Intel Macs are not supported.
 - [Homebrew](https://brew.sh)
 - Packer ≥ 1.16 and Tart ≥ 1.16.0 (Sequoia/Tahoe); the Golden Gate template needs Tart CLI ≥ 2.33.0 for `--provisioning-opts` and a macOS 27+ host.
 - Jamf Pro access to create enrollment invitations (only needed if `mdm_vendor = jamf`).

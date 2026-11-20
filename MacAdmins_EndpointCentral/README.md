@@ -4,6 +4,8 @@ Bengaluru · Saturday, 12 December 2026 · Aloft Bengaluru Outer Ring Road
 
 Build a clean macOS virtual machine on your own Mac **before the workshop** so you can enroll it in ManageEngine Endpoint Central during the hands-on session. These templates create a plain VM with a local admin account. They include **no MDM profile or enrollment**; you'll do that in the workshop.
 
+> **Apple Silicon only.** This workshop setup works only on Apple Silicon Macs (M1 or later). Intel Macs are not supported.
+
 ## Pick your VM
 
 | Template | VM you get | Host Mac must be on | Default VM name |
@@ -27,7 +29,7 @@ The script `check-host.sh` does this check for you (see step 3).
 
 ## Requirements
 
-- **Apple silicon Mac** (M1 or later). Intel Macs can't run these VMs.
+- **Apple Silicon Mac** (M1 or later). Intel Macs are not supported.
 - Host macOS version as in the tables above.
 - **At least 16 GB RAM** (the VM uses 8 GB) and **60 GB or more free disk space**. The IPSW download is about 17 GB, and the VM disk is thin-provisioned (it grows as used, up to 100 GB).
 - [Homebrew](https://brew.sh)
