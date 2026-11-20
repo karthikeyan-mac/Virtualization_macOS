@@ -1,12 +1,11 @@
 #!/bin/bash
 # Checks that this Mac can build the workshop VM.
 # A Mac cannot create a macOS VM newer than its own OS.
-# Usage: ./check-host.sh 26|27
+# Usage: ./check-host.sh 26
 set -u
 case "${1:-}" in
   26) REQUIRED="26.6.2"; NAME="Tahoe" ;;
-  27) REQUIRED="27.2";   NAME="Golden Gate" ;;
-  *) echo "Usage: $0 26|27"; exit 2 ;;
+  *) echo "Usage: $0 26"; exit 2 ;;
 esac
 HOST="$(sw_vers -productVersion)"
 if [ "$(uname -m)" != "arm64" ]; then

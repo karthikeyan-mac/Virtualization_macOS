@@ -44,6 +44,8 @@ It's inspired by [MotionBug's "The Cookbook: Baking up your perfect Jamf Pro Tes
 | `macos26.6.2_tahoe-tart.pkr.hcl` | 26.6.2 (25G83) | `tahoe-jamfdev-266` | Setup Assistant `boot_command` keystrokes |
 | `macos27.2_golden-gate-tart.pkr.hcl` | 27.2 (26B123) | `goldengate-jamfdev-272` | Tart's `--provisioning-opts` (no Setup Assistant); requires Tart CLI ≥ 2.33.0 and macOS 27+ on the host |
 
+> **⚠️ Known issue: macOS 27 (Golden Gate) MDM enrollment.** macOS 27 currently has issues with MDM enrollment. This is reported to be fixed in **macOS 27.3 beta**. Until then, MDM enrollment on the Golden Gate VM may not work; use Sequoia or Tahoe if you need to enroll.
+
 ## Prerequisites
 
 - Apple Silicon

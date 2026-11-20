@@ -9,20 +9,17 @@ Build a clean macOS virtual machine on your own Mac **before the workshop** so y
 | Template | VM you get | Host Mac must be on | Default VM name |
 |---|---|---|---|
 | `manageengine_macos26.6.2_tahoe-tart.pkr.hcl` | macOS Tahoe **26.6.2** | **macOS 26.6.2 or later** | `tahoe-workshop-266` |
-| `manageengine_macos27.2_golden-gate-tart.pkr.hcl` | macOS Golden Gate **27.2** | **macOS 27.2 or later** | `goldengate-workshop-272` |
 
-You only need one. Choose whichever you want to practise on.
+> **Note: macOS 27 (Golden Gate) is not included.** macOS 27 currently has MDM enrollment issues, which are reported to be fixed in macOS 27.3 beta. Until then, please use the Tahoe 26.6.2 VM for the workshop.
 
 ## ⚠️ Your Mac's OS must be the same or newer than the VM
 
 A Mac cannot create a VM that runs a newer macOS than its own. Check your version first (Apple menu → About This Mac, or run `sw_vers -productVersion`).
 
-| Your Mac runs | Can build Tahoe 26.6.2 VM? | Can build Golden Gate 27.2 VM? |
-|---|---|---|
-| macOS 26.2 | ❌ No. Update to 26.6.2 or later | ❌ No |
-| macOS 26.6.2 or any later 26.x | ✅ Yes | ❌ No (needs 27.2 or later) |
-| macOS 27.0 | ✅ Yes | ❌ No. Update to 27.2 or later |
-| macOS 27.2 or later | ✅ Yes | ✅ Yes |
+| Your Mac runs | Can build Tahoe 26.6.2 VM? |
+|---|---|
+| macOS 26.2 | ❌ No. Update to 26.6.2 or later |
+| macOS 26.6.2 or later | ✅ Yes |
 
 If you're below the required version, update first: **System Settings → General → Software Update**. Do this at home rather than at the venue, as updates are large.
 
@@ -35,7 +32,6 @@ The script `check-host.sh` does this check for you (see step 3).
 - **At least 16 GB RAM** (the VM uses 8 GB) and **60 GB or more free disk space**. The IPSW download is about 17 GB, and the VM disk is thin-provisioned (it grows as used, up to 100 GB).
 - [Homebrew](https://brew.sh)
 - Good internet. Run the build **at home**, not on venue Wi-Fi.
-- Golden Gate (27.2) template only: **Tart CLI 2.33.0 or later**.
 
 ## Steps
 
@@ -43,7 +39,7 @@ The script `check-host.sh` does this check for you (see step 3).
 
 ```bash
 brew install cirruslabs/cli/tart hashicorp/tap/packer
-tart --version      # Golden Gate template needs 2.33.0 or later
+tart --version
 ```
 
 ### 2. Get these files
@@ -57,25 +53,15 @@ cd Virtualization_macOS/ManageEngineWorkshop
 
 ```bash
 ./check-host.sh 26    # for the Tahoe 26.6.2 VM
-./check-host.sh 27    # for the Golden Gate 27.2 VM
 ```
 
 It must print `OK`. If it prints `FAIL`, update macOS (see above) before continuing.
 
 ### 4. Build the VM
 
-Tahoe 26.6.2:
-
 ```bash
 packer init manageengine_macos26.6.2_tahoe-tart.pkr.hcl
 packer build manageengine_macos26.6.2_tahoe-tart.pkr.hcl
-```
-
-Golden Gate 27.2:
-
-```bash
-packer init manageengine_macos27.2_golden-gate-tart.pkr.hcl
-packer build manageengine_macos27.2_golden-gate-tart.pkr.hcl
 ```
 
 The build downloads the IPSW, installs macOS and sets up the account, which takes **30–60 minutes**.
@@ -86,7 +72,7 @@ The build downloads the IPSW, installs macOS and sets up the account, which take
 
 ```bash
 tart list                          # confirm your VM is there
-tart run tahoe-workshop-266        # or: tart run goldengate-workshop-272
+tart run tahoe-workshop-266
 ```
 
 Log in (auto-login is on) with:
