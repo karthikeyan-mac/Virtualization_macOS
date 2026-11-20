@@ -14,8 +14,6 @@ packer {
 //   - "Sharing" is no longer in the System Settings View menu; it's opened
 //     via the x-apple.systempreferences:com.apple.Sharing-Settings.extension
 //     URL scheme instead.
-// Source template for comparison: cirruslabs/macos-image-templates
-// templates/vanilla-golden-gate.pkr.hcl (codename "golden-gate").
 
 # -------------------------
 # Variables

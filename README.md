@@ -41,7 +41,7 @@ It's inspired by [MotionBug's "The Cookbook: Baking up your perfect Jamf Pro Tes
 | File | Target macOS | Default `vm_name` | Setup method |
 |---|---|---|---|
 | `macos15.6.1_sequoia-tart.pkr.hcl` | 15.6.1 (24G90) | `sequoia-jamfdev-1561` | Setup Assistant `boot_command` keystrokes |
-| `macos26.2_tahoe-tart.pkr.hcl` | 26.2 (25C56) | `tahoe-jamfdev-261` | Setup Assistant `boot_command` keystrokes |
+| `macos26.6.2_tahoe-tart.pkr.hcl` | 26.6.2 (25G83) | `tahoe-jamfdev-266` | Setup Assistant `boot_command` keystrokes |
 | `macos27.2_golden-gate-tart.pkr.hcl` | 27.2 (26B123) | `goldengate-jamfdev-272` | Tart's `--provisioning-opts` (no Setup Assistant); requires Tart CLI ≥ 2.33.0 and macOS 27+ on the host |
 
 ## Prerequisites
@@ -98,15 +98,15 @@ brew install hashicorp/tap/packer
 ## 4.🧑‍💻Building the VM
 
 ```bash
-packer init macos26.2_tahoe-tart.pkr.hcl
-packer validate macos26.2_tahoe-tart.pkr.hcl
-packer build macos26.2_tahoe-tart.pkr.hcl
+packer init macos26.6.2_tahoe-tart.pkr.hcl
+packer validate macos26.6.2_tahoe-tart.pkr.hcl
+packer build macos26.6.2_tahoe-tart.pkr.hcl
 ```
 Replace with `macos15.6.1_sequoia-tart.pkr.hcl` or `macos27.2_golden-gate-tart.pkr.hcl` to build the Sequoia or Golden Gate image instead.
 
 ### Override variable at runtime (build)
 ```bash
-packer build -var="account_userName=macadmin" -var="account_password=supersecurepass" -var="enable_auto_login=true" macos26.2_tahoe-tart.pkr.hcl
+packer build -var="account_userName=macadmin" -var="account_password=supersecurepass" -var="enable_auto_login=true" macos26.6.2_tahoe-tart.pkr.hcl
 ```
 
 🟥 $${\color{Red}Note:}$$ No interaction required. Once the image finishes installing, Tart starts the VM and runs the automated setup. Avoid clicking or typing in the VM and allow the build to finish.
@@ -139,7 +139,6 @@ tart help run                                 # tart run manual pages for all ot
 - [The Cookbook: Baking up your perfect Jamf Pro Test VM](https://www.motionbug.com/the-cookbook-baking-up-your-perfect-jamf-pro-test-vm/)
 - [Packer Docs](https://developer.hashicorp.com/packer/docs)
 - [Tart](https://tart.run)
-- [cirruslabs/macos-image-templates](https://github.com/cirruslabs/macos-image-templates) — upstream reference templates these boot_commands are adapted from
 
 ## Previous versions
 
@@ -148,3 +147,4 @@ Older, known-working templates are kept in [`previous_versions/`](previous_versi
 | File | Target macOS | Default `vm_name` |
 |---|---|---|
 | `previous_versions/macos27.0_golden-gate-tart.pkr.hcl` | 27.0 (26A428) | `goldengate-jamfdev-270` |
+| `previous_versions/macos26.2_tahoe-tart.pkr.hcl` | 26.2 (25C56) | `tahoe-jamfdev-261` |
